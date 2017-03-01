@@ -1,6 +1,7 @@
 @echo off
 rem Batch script for running the test suite.
-rem Requires the python package `nose` to be installed.
+call set_python_path.bat
+rem calls the python package `nose` in local site-packages.
 set nosetests=call python -W ignore::DeprecationWarning -m nose
 
 %nosetests% ^
