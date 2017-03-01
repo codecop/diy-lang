@@ -2,17 +2,24 @@
 
 import re
 from .ast import is_boolean, is_list
-from .types import DiyLangError, String
+from .types import DiyLangError
+
 
 """
-This is the parser module, with the `parse` function which you'll implement as part 1 of
-the workshop. Its job is to convert strings into data structures that the evaluator can
-understand.
+This is the parser module, with the `parse` function which you'll implement as
+part 1 of the workshop. Its job is to convert strings into data structures that
+the evaluator can understand.
 """
+
 
 def parse(source):
     """Parse string representation of one *single* expression
     into the corresponding Abstract Syntax Tree."""
+
+    source = remove_comments(source).strip()
+
+    if source[0] == "'":
+        return ['quote', parse(source[1:])]
 
     if source[0] == '#':
         return source[1] == 't'
@@ -24,19 +31,24 @@ def parse(source):
         return []
 
     if source[0] == '(':
-        return source[1:-1].split(r" ")
+        closing = find_matching_paren(source, 0)
+        if closing + 1 < len(source):
+            raise DiyLangError('Expected EOF')
+
+        token = split_exps(source[1:closing])
+        return map(parse, token)
 
     return source
 
-##
-## Below are a few useful utility functions. These should come in handy when
-## implementing `parse`. We don't want to spend the day implementing parenthesis
-## counting, after all.
-##
+#
+# Below are a few useful utility functions. These should come in handy when
+# implementing `parse`. We don't want to spend the day implementing parenthesis
+# counting, after all.
+#
 
 
 def remove_comments(source):
-    """Remove from a string anything in between a ; and a linebreak"""
+    """Remove from a string anything in between a ; and a line break"""
     return re.sub(r";.*\n", "\n", source)
 
 
@@ -95,14 +107,15 @@ def first_expression(source):
         atom = source[:end]
         return atom, source[end:]
 
-##
-## The functions below, `parse_multiple` and `unparse` are implemented in order for
-## the REPL to work. Don't worry about them when implementing the language.
-##
+#
+# The functions below, `parse_multiple` and `unparse` are implemented in order
+# for the REPL to work. Don't worry about them when implementing the language.
+#
 
 
 def parse_multiple(source):
-    """Creates a list of ASTs from program source constituting multiple expressions.
+    """Creates a list of ASTs from program source constituting multiple
+    expressions.
 
     Example:
 

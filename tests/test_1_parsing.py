@@ -71,7 +71,7 @@ def test_parse_on_nested_list():
 
 
 def test_parse_exception_missing_paren():
-    """TEST 1.7: The proper exception should be raised if the expresions is incomplete."""
+    """TEST 1.7: The proper exception should be raised if the expressions is incomplete."""
 
     with assert_raises_regexp(DiyLangError, 'Incomplete expression'):
         parse('(foo (bar x y)')
@@ -138,7 +138,7 @@ def test_parse_larger_example():
              ['*', 'n', ['fact', ['-', 'n', 1]]]]]]
     assert_equals(ast, parse(program))
 
-## The following tests checks that quote expansion works properly
+# The following tests checks that quote expansion works properly
 
 
 def test_expand_single_quoted_symbol():
