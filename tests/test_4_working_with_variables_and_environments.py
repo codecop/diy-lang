@@ -10,7 +10,8 @@ from diylang.parser import parse
 Before we go on to evaluating programs using variables, we need to implement
 an environment to store them in.
 
-It is time to fill in the blanks in the `Environment` class located in `types.py`.
+It is time to fill in the blanks in the `Environment` class located in
+`types.py`.
 """
 
 
@@ -147,7 +148,8 @@ def test_define_with_nonsymbol_as_variable():
     with assert_raises_regexp(DiyLangError, "not a symbol"):
         evaluate(parse("(define #t 42)"), Environment())
 
-def test_define_with_nonsymbol_as_variable():
+
+def test_define_evaluates_argument():
     """TEST 4.13: Defines should evaluate the argument before storing it in
     the environment.
     """
