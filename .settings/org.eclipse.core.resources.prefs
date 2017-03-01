@@ -1,6 +1,8 @@
 eclipse.preferences.version=1
 encoding//diylang/ast.py=utf-8
 encoding//diylang/evaluator.py=utf-8
+encoding//diylang/interpreter.py=utf-8
 encoding//diylang/parser.py=utf-8
 encoding//tests/test_1_parsing.py=utf-8
 encoding//tests/test_2_evaluating_simple_expressions.py=utf-8
+encoding//tests/test_3_evaluating_complex_expressions.py=utf-8

@@ -6,6 +6,7 @@ from diylang.types import Environment
 from diylang.evaluator import evaluate
 from diylang.parser import parse
 
+
 def test_nested_expression():
     """TEST 3.1: Remember, functions should evaluate their arguments.
 
