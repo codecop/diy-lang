@@ -17,4 +17,36 @@ in a day, after all.)
 
 def evaluate(ast, env):
     """Evaluate an Abstract Syntax Tree in the specified environment."""
-    raise NotImplementedError("DIY")
+    if (is_boolean(ast)):
+        return ast
+    if (is_integer(ast)):
+        return ast
+
+    if len(ast) == 2 and ast[0] == 'quote':
+        return ast[1]
+
+    if len(ast) == 2 and ast[0] == 'atom':
+        return is_atom(evaluate(ast[1], env))
+
+    if len(ast) == 3 and ast[0] == 'eq':
+        left = evaluate(ast[1], env)
+        right = evaluate(ast[2], env)
+        if is_list(left) or is_list(right):
+            return False
+        return left == right
+
+    if len(ast) == 3 and ast[0] == 'mod':
+        left = _eval_num(ast[1], env)
+        right = _eval_num(ast[2], env)
+        return left % right
+
+    if len(ast) == 3 and ast[0] in ['+', '-', '/', '*', '>']:
+        left = _eval_num(ast[1], env)
+        right = _eval_num(ast[2], env)
+        return eval(str(left) + ast[0] + str(right))
+
+
+def _eval_num(ast, env):
+    if not is_integer(ast):
+        raise DiyLangError(str(ast))
+    return evaluate(ast, env)
