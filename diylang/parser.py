@@ -14,7 +14,19 @@ def parse(source):
     """Parse string representation of one *single* expression
     into the corresponding Abstract Syntax Tree."""
 
-    raise NotImplementedError("DIY")
+    if source[0] == '#':
+        return source[1] == 't'
+
+    if re.match(r"^\d+$", source):
+        return int(source)
+
+    if source == '()':
+        return []
+
+    if source[0] == '(':
+        return source[1:-1].split(r" ")
+
+    return source
 
 ##
 ## Below are a few useful utility functions. These should come in handy when
