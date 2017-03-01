@@ -2,7 +2,8 @@
 
 import re
 from .ast import is_boolean, is_list
-from .types import DiyLangError, String
+from .types import DiyLangError
+
 
 """
 This is the parser module, with the `parse` function which you'll implement as
@@ -15,6 +16,11 @@ def parse(source):
     """Parse string representation of one *single* expression
     into the corresponding Abstract Syntax Tree."""
 
+    source = remove_comments(source).strip()
+
+    if source[0] == "'":
+        return ['quote', parse(source[1:])]
+
     if source[0] == '#':
         return source[1] == 't'
 
@@ -25,7 +31,12 @@ def parse(source):
         return []
 
     if source[0] == '(':
-        return source[1:-1].split(r" ")
+        closing = find_matching_paren(source, 0)
+        if closing + 1 < len(source):
+            raise DiyLangError('Expected EOF')
+
+        token = split_exps(source[1:closing])
+        return map(parse, token)
 
     return source
 
