@@ -24,6 +24,12 @@ def evaluate(ast, env):
     if is_symbol(ast):
         return env.lookup(ast)
 
+    if is_closure(ast):
+        return env.lookup(ast)
+
+    if len(ast) == 0:
+        return None
+
     if len(ast) == 2 and ast[0] == 'quote':
         return ast[1]
 
@@ -45,13 +51,22 @@ def evaluate(ast, env):
         left, right = evalParts(ast[1:], env)
         return eval(str(left) + ast[0] + str(right))
 
+    if len(ast) >= 1 and ast[0] == 'lambda':
+        if not len(ast) == 3:
+            raise DiyLangError("wrong number of arguments")
+        if not is_list(ast[1]):
+            raise DiyLangError("arguments must be list")
+        params = ast[1]
+        body = ast[2]
+        return Closure(env, params, body)
+
     if len(ast) == 4 and ast[0] == 'if':
         if evaluate(ast[1], env):
             return evaluate(ast[2], env)
         else:
             return evaluate(ast[3], env)
 
-    if ast[0] == 'define':
+    if len(ast) >= 1 and ast[0] == 'define':
         if len(ast) != 3:
             raise DiyLangError("Wrong number of arguments")
         if not is_symbol(ast[1]):
@@ -61,7 +76,7 @@ def evaluate(ast, env):
         env.set(name, value)
         return value
 
-    raise DiyLangError(str(str(ast)))
+    raise DiyLangError(str(ast))
 
 
 def evalParts(ast, env):
