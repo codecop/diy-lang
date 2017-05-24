@@ -35,8 +35,7 @@ def parse(source):
         if closing + 1 < len(code):
             raise DiyLangError('Expected EOF')
 
-        token = split_exps(code[1:closing])
-        return map(parse, token)
+        return parse_multiple(code[1:closing])
 
     return code
 
