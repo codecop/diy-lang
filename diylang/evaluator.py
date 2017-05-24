@@ -24,11 +24,16 @@ def evaluate(ast, env):
     if is_symbol(ast):
         return env.lookup(ast)
 
-    if is_closure(ast):
-        return env.lookup(ast)
-
     if len(ast) == 0:
         return None
+
+    if is_closure(ast[0]):
+        sub_env = {}
+        names = ast[0].params
+        values = ast[1:]
+        for p in zip(names, values):
+            sub_env[p[0]] = evaluate(p[1], env)
+        return evaluate(ast[0].body, ast[0].env.extend(sub_env))
 
     if len(ast) == 2 and ast[0] == 'quote':
         return ast[1]
