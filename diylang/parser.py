@@ -16,29 +16,29 @@ def parse(source):
     """Parse string representation of one *single* expression
     into the corresponding Abstract Syntax Tree."""
 
-    source = remove_comments(source).strip()
+    code = remove_comments(source).strip()
 
-    if source[0] == "'":
-        return ['quote', parse(source[1:])]
+    if code[0] == "'":
+        return ['quote', parse(code[1:])]
 
-    if source[0] == '#':
-        return source[1] == 't'
+    if code[0] == '#':
+        return code[1] == 't'
 
-    if re.match(r"^\d+$", source):
-        return int(source)
+    if re.match(r"^\d+$", code):
+        return int(code)
 
-    if source == '()':
+    if code == '()':
         return []
 
-    if source[0] == '(':
-        closing = find_matching_paren(source, 0)
-        if closing + 1 < len(source):
+    if code[0] == '(':
+        closing = find_matching_paren(code, 0)
+        if closing + 1 < len(code):
             raise DiyLangError('Expected EOF')
 
-        token = split_exps(source[1:closing])
+        token = split_exps(code[1:closing])
         return map(parse, token)
 
-    return source
+    return code
 
 #
 # Below are a few useful utility functions. These should come in handy when

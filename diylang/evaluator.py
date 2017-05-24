@@ -4,7 +4,6 @@ from .types import Environment, DiyLangError, Closure, String
 from .ast import is_boolean, is_atom, is_symbol, is_list, is_closure, \
     is_integer, is_string
 from .parser import unparse
-from diylang.ast import is_string
 
 """
 This is the Evaluator module. The `evaluate` function below is the heart
