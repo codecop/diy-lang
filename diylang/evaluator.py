@@ -87,9 +87,9 @@ def evaluate(ast, env):
        replaced_ast.extend(ast[1:])
        return evaluate(replaced_ast, env)
 
-    if is_list(ast) and len(ast) >= 1 and is_lambda(ast[0]):  # direct invocation
-       closure = evaluate(ast[0], env)
-       replaced_ast = [closure]
+    if is_list(ast) and len(ast) >= 1 and not is_atom(ast[0]):  # direct invocation
+       direct = evaluate(ast[0], env)
+       replaced_ast = [direct]
        replaced_ast.extend(ast[1:])
        return evaluate(replaced_ast, env)
 
