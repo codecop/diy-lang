@@ -28,6 +28,9 @@ def evaluate(ast, env):
         sub_env = {}
         names = ast[0].params
         values = ast[1:]
+        if len(names) != len(values):
+            raise DiyLangError("wrong number of arguments, expected " +
+                    str(len(names)) + " got " + str(len(values)))
         for p in zip(names, values):
             sub_env[p[0]] = evaluate(p[1], env)
         return evaluate(ast[0].body, ast[0].env.extend(sub_env))
@@ -86,6 +89,9 @@ def evaluate(ast, env):
        replaced_ast = [closure]
        replaced_ast.extend(ast[1:])
        return evaluate(replaced_ast, env)
+
+    if is_list(ast) and len(ast) >= 1 and is_atom(ast[0]):
+       raise DiyLangError("not a function")
 
     if is_list(ast) and len(ast) >= 1 and not is_atom(ast[0]):  # direct invocation
        direct = evaluate(ast[0], env)
