@@ -24,10 +24,10 @@ def evaluate(ast, env):
     if is_symbol(ast):
         return env.lookup(ast)
 
-    if len(ast) == 0:
-        return None
+#    if len(ast) == 0:
+#        return None
 
-    if is_closure(ast[0]):
+    if len(ast) >= 1 and is_closure(ast[0]):
         sub_env = {}
         names = ast[0].params
         values = ast[1:]
@@ -80,6 +80,12 @@ def evaluate(ast, env):
         value = evaluate(ast[2], env)
         env.set(name, value)
         return value
+
+    if is_symbol(ast[0]):  # closure invocation
+       closure = env.lookup(ast[0])
+       replaced_ast = [closure]
+       replaced_ast.extend(ast[1:])
+       return evaluate(replaced_ast, env)
 
     raise DiyLangError(str(ast))
 
