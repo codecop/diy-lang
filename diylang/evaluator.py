@@ -24,10 +24,7 @@ def evaluate(ast, env):
     if is_symbol(ast):
         return env.lookup(ast)
 
-#    if len(ast) == 0:
-#        return None
-
-    if len(ast) >= 1 and is_closure(ast[0]):
+    if is_list(ast) and len(ast) >= 1 and is_closure(ast[0]):
         sub_env = {}
         names = ast[0].params
         values = ast[1:]
@@ -35,28 +32,31 @@ def evaluate(ast, env):
             sub_env[p[0]] = evaluate(p[1], env)
         return evaluate(ast[0].body, ast[0].env.extend(sub_env))
 
-    if len(ast) == 2 and ast[0] == 'quote':
+    if is_list(ast) and len(ast) == 2 and ast[0] == 'quote':
         return ast[1]
 
-    if len(ast) == 2 and ast[0] == 'atom':
+    if is_list(ast) and len(ast) == 2 and ast[0] == 'atom':
         return is_atom(evaluate(ast[1], env))
 
-    if len(ast) == 3 and ast[0] == 'eq':
+    if is_list(ast) and len(ast) == 3 and ast[0] == 'eq':
         left = evaluate(ast[1], env)
         right = evaluate(ast[2], env)
         if is_list(left) or is_list(right):
             return False
         return left == right
 
-    if len(ast) == 3 and ast[0] == 'mod':
+    if is_list(ast) and len(ast) == 3 and ast[0] == 'mod':
         left, right = evalParts(ast[1:], env)
         return left % right
 
-    if len(ast) == 3 and ast[0] in ['+', '-', '/', '*', '>']:
+    if is_list(ast) and len(ast) == 3 and ast[0] in ['+', '-', '/', '*', '>']:
         left, right = evalParts(ast[1:], env)
         return eval(str(left) + ast[0] + str(right))
 
-    if len(ast) >= 1 and ast[0] == 'lambda':
+    def is_lambda(ast):
+        return is_list(ast) and len(ast) >= 1 and ast[0] == 'lambda'
+
+    if is_lambda(ast):
         if not len(ast) == 3:
             raise DiyLangError("wrong number of arguments")
         if not is_list(ast[1]):
@@ -65,13 +65,13 @@ def evaluate(ast, env):
         body = ast[2]
         return Closure(env, params, body)
 
-    if len(ast) == 4 and ast[0] == 'if':
+    if is_list(ast) and len(ast) == 4 and ast[0] == 'if':
         if evaluate(ast[1], env):
             return evaluate(ast[2], env)
         else:
             return evaluate(ast[3], env)
 
-    if len(ast) >= 1 and ast[0] == 'define':
+    if is_list(ast) and len(ast) >= 1 and ast[0] == 'define':
         if len(ast) != 3:
             raise DiyLangError("Wrong number of arguments")
         if not is_symbol(ast[1]):
@@ -81,8 +81,14 @@ def evaluate(ast, env):
         env.set(name, value)
         return value
 
-    if is_symbol(ast[0]):  # closure invocation
+    if is_list(ast) and len(ast) >= 1 and is_symbol(ast[0]):  # closure invocation
        closure = env.lookup(ast[0])
+       replaced_ast = [closure]
+       replaced_ast.extend(ast[1:])
+       return evaluate(replaced_ast, env)
+
+    if is_list(ast) and len(ast) >= 1 and is_lambda(ast[0]):  # direct invocation
+       closure = evaluate(ast[0], env)
        replaced_ast = [closure]
        replaced_ast.extend(ast[1:])
        return evaluate(replaced_ast, env)
