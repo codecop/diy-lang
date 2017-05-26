@@ -7,6 +7,8 @@
 ;; DIY -- Implement the rest of your standard library
 ;; here as part 7 of the workshop.
 
+;; written during exercise
+
 (define or
     (lambda (a b)
         (if a #t (if b #t #f))))
@@ -47,31 +49,54 @@
     (lambda (a b)
         (if (empty a) b (cons (head a) (append (tail a) b)))))
 
+(define list
+    (lambda (element)
+        (cons element '())))
+
 (define reverse
     (lambda (l)
-        (if (empty l) '() (append (reverse (tail l)) (cons (head l) '())))))
+        (if (empty l) '() (append (reverse (tail l)) (list (head l))))))
 
 (define filter
-    (lambda (predicate list)
-        (if (empty list)
+    (lambda (predicate l)
+        (if (empty l)
             '()
             (append
-                (if (predicate (head list))
-                    (cons (head list) '())
+                (if (predicate (head l))
+                    (list (head l))
                     '())
-                (filter predicate (tail list))))))
+                (filter predicate (tail l))))))
 
 (define map
-    (lambda (mapper list)
-        (if (empty list)
+    (lambda (mapper l)
+        (if (empty l)
             '()
             (append
-                (cons (mapper (head list)) '())
-                (map mapper (tail list))))))
+                (list (mapper (head l)))
+                (map mapper (tail l))))))
 
 (define reduce
-    (lambda (reducer initial list)
-        (if (empty list)
-            (head (cons initial '()))
-            (reduce reducer (reducer initial (head list)) (tail list)))))
+    (lambda (reducer initial l)
+        (if (empty l)
+            (head (list initial))
+            (reduce reducer (reducer initial (head l)) (tail l)))))
 
+(define _insert
+    (lambda (element l)
+        (if (empty l)
+            (list element)
+            (if (<= element (head l))
+                (cons element l)
+                (append (list (head l)) (_insert element (tail l)))))))
+
+(define _merge
+    (lambda (a b)
+        (if (empty a)
+            (head (list b))
+            (_merge (tail a) (_insert (head a) b)))))
+
+(define sort
+    (lambda (l)
+        (if (empty l)
+            '()
+            ( _merge l '()))))
