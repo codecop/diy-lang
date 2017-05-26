@@ -16,13 +16,19 @@ def parse(source):
     """Parse string representation of one *single* expression
     into the corresponding Abstract Syntax Tree."""
 
+    # written during exercise
+
     code = remove_comments(source).strip()
 
-    if code[0] == "'":
+    if len(code) > 1 and code[0] == "'":
         return ['quote', parse(code[1:])]
 
-    if code[0] == '#':
-        return code[1] == 't'
+    if len(code) == 2 and code[0] == '#':
+        if code[1] == 't':
+            return True
+        elif code[1] == 'f':
+            return False
+        raise DiyLangError('Expected boolean')
 
     if re.match(r"^\d+$", code):
         return int(code)
@@ -30,13 +36,13 @@ def parse(source):
     if code == '()':
         return []
 
-    if code[0] == '(':
+    if len(code) > 1 and code[0] == '(':
         closing = find_matching_paren(code, 0)
         if closing + 1 < len(code):
             raise DiyLangError('Expected EOF')
+        return parse_multiple(code[1:-1])
 
-        return parse_multiple(code[1:closing])
-
+    # symbol
     return code
 
 #

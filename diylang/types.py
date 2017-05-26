@@ -15,6 +15,8 @@ class DiyLangError(Exception):
 
 class Closure(object):
 
+    # written during exercise
+
     def __init__(self, env, params, body):
         self.env = env
         self.params = params
@@ -25,6 +27,8 @@ class Closure(object):
 
 
 class Environment(object):
+
+    # written during exercise
 
     def __init__(self, variables=None):
         self.bindings = variables if variables else {}
