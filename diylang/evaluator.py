@@ -30,7 +30,7 @@ def evaluate(ast, env):
         values = ast[1:]
         if len(names) != len(values):
             raise DiyLangError("wrong number of arguments, expected " +
-                    str(len(names)) + " got " + str(len(values)))
+                               str(len(names)) + " got " + str(len(values)))
         for p in zip(names, values):
             sub_env[p[0]] = evaluate(p[1], env)
         return evaluate(ast[0].body, ast[0].env.extend(sub_env))
@@ -49,15 +49,15 @@ def evaluate(ast, env):
         return left == right
 
     if is_list(ast) and len(ast) == 3 and ast[0] == 'mod':
-        left, right = evalParts(ast[1:], env)
+        left, right = eval_parts(ast[1:], env)
         return left % right
 
     if is_list(ast) and len(ast) == 3 and ast[0] in ['+', '-', '/', '*', '>']:
-        left, right = evalParts(ast[1:], env)
+        left, right = eval_parts(ast[1:], env)
         return eval(str(left) + ast[0] + str(right))
 
-    def is_lambda(ast):
-        return is_list(ast) and len(ast) >= 1 and ast[0] == 'lambda'
+    def is_lambda(a):
+        return is_list(a) and len(a) >= 1 and a[0] == 'lambda'
 
     if is_lambda(ast):
         if not len(ast) == 3:
@@ -85,24 +85,24 @@ def evaluate(ast, env):
         return value
 
     if is_list(ast) and len(ast) >= 1 and is_symbol(ast[0]):  # closure invocation
-       closure = env.lookup(ast[0])
-       replaced_ast = [closure]
-       replaced_ast.extend(ast[1:])
-       return evaluate(replaced_ast, env)
+        closure = env.lookup(ast[0])
+        replaced_ast = [closure]
+        replaced_ast.extend(ast[1:])
+        return evaluate(replaced_ast, env)
 
     if is_list(ast) and len(ast) >= 1 and is_atom(ast[0]):
-       raise DiyLangError("not a function")
+        raise DiyLangError("not a function")
 
     if is_list(ast) and len(ast) >= 1 and not is_atom(ast[0]):  # direct invocation
-       direct = evaluate(ast[0], env)
-       replaced_ast = [direct]
-       replaced_ast.extend(ast[1:])
-       return evaluate(replaced_ast, env)
+        direct = evaluate(ast[0], env)
+        replaced_ast = [direct]
+        replaced_ast.extend(ast[1:])
+        return evaluate(replaced_ast, env)
 
     raise DiyLangError(str(ast))
 
 
-def evalParts(ast, env):
+def eval_parts(ast, env):
     left = evaluate(ast[0], env)
     right = evaluate(ast[1], env)
 
