@@ -50,3 +50,28 @@
 (define reverse
     (lambda (l)
         (if (empty l) '() (append (reverse (tail l)) (cons (head l) '())))))
+
+(define filter
+    (lambda (predicate list)
+        (if (empty list)
+            '()
+            (append
+                (if (predicate (head list))
+                    (cons (head list) '())
+                    '())
+                (filter predicate (tail list))))))
+
+(define map
+    (lambda (mapper list)
+        (if (empty list)
+            '()
+            (append
+                (cons (mapper (head list)) '())
+                (map mapper (tail list))))))
+
+(define reduce
+    (lambda (reducer initial list)
+        (if (empty list)
+            (head (cons initial '()))
+            (reduce reducer (reducer initial (head list)) (tail list)))))
+
