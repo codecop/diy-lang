@@ -26,6 +26,55 @@ def evaluate(ast, env):
     if is_symbol(ast):
         return env.lookup(ast)
 
+    if is_list_with(ast) and ast[0] == 'quote':
+        check_args_number(ast, 2, 'quote')
+        return ast[1]
+
+    if is_list_with(ast) and ast[0] == 'atom':
+        check_args_number(ast, 2, 'atom')
+        return is_atom(evaluate(ast[1], env))
+
+    if is_list_with_command(ast, 'eq'):
+        check_args_number(ast, 3, 'eq')
+        left = evaluate(ast[1], env)
+        right = evaluate(ast[2], env)
+        if is_list(left) or is_list(right):
+            return False
+        return left == right
+
+    if is_list_with_command(ast, 'mod'):
+        check_args_number(ast, 3, 'mod')
+        left, right = eval_parts(ast[1:], env)
+        return left % right
+
+    if is_list_with(ast) and ast[0] in ['+', '-', '/', '*', '>']:
+        check_args_number(ast, 3, ast[0])
+        left, right = eval_parts(ast[1:], env)
+        return eval(str(left) + ast[0] + str(right))
+
+    if is_list_with_command(ast, 'if'):
+        check_args_number(ast, 4, 'if')
+        if evaluate(ast[1], env):
+            return evaluate(ast[2], env)
+        else:
+            return evaluate(ast[3], env)
+
+    if is_list_with_command(ast, 'define'):
+        check_args_number(ast, 3, 'define')
+        if not is_symbol(ast[1]):
+            raise DiyLangError("not a symbol")  # 'define argument must be symbol'
+        name = ast[1]
+        value = evaluate(ast[2], env)
+        env.set(name, value)
+        return value
+
+    if is_list_with_command(ast, 'lambda'):
+        check_args_number(ast, 3, 'lambda')
+        check_arg_list(ast[1], 'lambda')
+        params = ast[1]
+        body = ast[2]
+        return Closure(env, params, body)
+
     if is_list_with(ast) and is_closure(ast[0]):
         closure = ast[0]
         values = ast[1:]
@@ -38,88 +87,34 @@ def evaluate(ast, env):
             sub_env[p[0]] = evaluate(p[1], env)
         return evaluate(closure.body, closure.env.extend(sub_env))
 
-    if is_list_with(ast) and ast[0] == 'quote':
-        check_args(ast, 2, 'quote')
-        return ast[1]
-
-    if is_list_with(ast) and ast[0] == 'atom':
-        check_args(ast, 2, 'atom')
-        return is_atom(evaluate(ast[1], env))
-
-    if is_list_with_command(ast, 'eq'):
-        check_args(ast, 3, 'eq')
-        left = evaluate(ast[1], env)
-        right = evaluate(ast[2], env)
-        if is_list(left) or is_list(right):
-            return False
-        return left == right
-
-    if is_list_with_command(ast, 'mod'):
-        check_args(ast, 3, 'mod')
-        left, right = eval_parts(ast[1:], env)
-        return left % right
-
-    if is_list_with(ast) and ast[0] in ['+', '-', '/', '*', '>']:
-        check_args(ast, 3, ast[0])
-        left, right = eval_parts(ast[1:], env)
-        return eval(str(left) + ast[0] + str(right))
-
-    if is_list_with_command(ast, 'lambda'):
-        check_args(ast, 3, 'lambda')
-        if not is_list(ast[1]):
-            raise DiyLangError("lambda arguments must be list")
-        params = ast[1]
-        body = ast[2]
-        return Closure(env, params, body)
-
-    if is_list_with_command(ast, 'if'):
-        check_args(ast, 4, 'if')
-        if evaluate(ast[1], env):
-            return evaluate(ast[2], env)
-        else:
-            return evaluate(ast[3], env)
-
-    if is_list_with_command(ast, 'define'):
-        check_args(ast, 3, 'define')
-        if not is_symbol(ast[1]):
-            raise DiyLangError("not a symbol")  # 'define argument must be symbol'
-        name = ast[1]
-        value = evaluate(ast[2], env)
-        env.set(name, value)
-        return value
-
     if is_list_with_command(ast, 'cons'):
-        check_args(ast, 3, 'cons')
+        check_args_number(ast, 3, 'cons')
         first = [evaluate(ast[1], env)]
         following = evaluate(ast[2], env)
-        if not is_list(following):
-            raise DiyLangError("cons arguments must be list")
+        check_arg_list(following, 'cons')
         first.extend(following)
         return first
 
     if is_list_with_command(ast, 'head'):
-        check_args(ast, 2, 'head')
+        check_args_number(ast, 2, 'head')
         elements = evaluate(ast[1], env)
-        if not is_list(elements):
-            raise DiyLangError("head arguments must be list")
+        check_arg_list(elements, 'head')
         if len(elements) == 0:
             raise DiyLangError("head of empty list")
         return elements[0]
 
     if is_list_with_command(ast, 'tail'):
-        check_args(ast, 2, 'tail')
+        check_args_number(ast, 2, 'tail')
         elements = evaluate(ast[1], env)
-        if not is_list(elements):
-            raise DiyLangError("tail arguments must be list")
+        check_arg_list(elements, 'tail')
         if len(elements) == 0:
             raise DiyLangError("tail of empty list")
         return elements[1:]
 
     if is_list_with_command(ast, 'empty'):
-        check_args(ast, 2, 'empty')
+        check_args_number(ast, 2, 'empty')
         elements = evaluate(ast[1], env)
-        if not is_list(elements):
-            raise DiyLangError("empty arguments must be list")
+        check_arg_list(elements, 'empty')
         return len(elements) == 0
 
     if is_list_with(ast) and is_symbol(ast[0]):  # closure invocation
@@ -148,9 +143,14 @@ def is_list_with(a):
     return is_list(a) and len(a) > 0
 
 
-def check_args(ast, number, command):
+def check_args_number(ast, number, command):
     if len(ast) != number:
         raise DiyLangError("Wrong number of arguments in " + command)
+
+
+def check_arg_list(ast, command):
+    if not is_list(ast):
+        raise DiyLangError(command + " arguments must be list")
 
 
 def eval_parts(ast, env):
