@@ -92,7 +92,7 @@ def evaluate(ast, env):
         params = ast[1]
         for p in params:
             if not is_symbol(p):
-                raise DiyLangError('lambda argument list argument must be symbol')
+                raise DiyLangError('lambda argument list must be symbols')
         body = ast[2]
         return Closure(env, params, body)
 
