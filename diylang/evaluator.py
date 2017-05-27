@@ -77,10 +77,22 @@ def evaluate(ast, env):
             sub_env = sub_env.extend(key_val)
         return evaluate(ast[2], sub_env)
 
+    if is_list_with_command(ast, 'defn'):
+        check_args_number(ast, 4, 'defn')
+        if not is_symbol(ast[1]):
+            raise DiyLangError('defn argument must be symbol')
+        name = ast[1]  # new symbol
+        closure = evaluate(_cons('lambda', ast[2:]), env)
+        env.set(name, closure)
+        return name
+
     if is_list_with_command(ast, 'lambda'):
         check_args_number(ast, 3, 'lambda')
         check_arg_list(ast[1], 'lambda')
         params = ast[1]
+        for p in params:
+            if not is_symbol(p):
+                raise DiyLangError('lambda argument list argument must be symbol')
         body = ast[2]
         return Closure(env, params, body)
 
