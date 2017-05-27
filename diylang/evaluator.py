@@ -68,6 +68,16 @@ def evaluate(ast, env):
         env.set(name, value)
         return value
 
+    if is_list_with_command(ast, 'let'):
+        check_args_number(ast, 3, 'let')
+        check_arg_list(ast[1], 'let')
+        sub_env = env
+        for p in ast[1]:
+            check_args_number(p, 2, 'let')
+            key_val = {p[0]: evaluate(p[1], sub_env)}
+            sub_env = sub_env.extend(key_val)
+        return evaluate(ast[2], sub_env)
+
     if is_list_with_command(ast, 'lambda'):
         check_args_number(ast, 3, 'lambda')
         check_arg_list(ast[1], 'lambda')
@@ -82,10 +92,11 @@ def evaluate(ast, env):
         if len(names) != len(values):
             raise DiyLangError("wrong number of arguments, expected " +
                                str(len(names)) + " got " + str(len(values)))
-        sub_env = {}
+        key_val = {}
         for p in zip(names, values):
-            sub_env[p[0]] = evaluate(p[1], env)
-        return evaluate(closure.body, closure.env.extend(sub_env))
+            key_val[p[0]] = evaluate(p[1], env)
+        sub_env = closure.env.extend(key_val)
+        return evaluate(closure.body, sub_env)
 
     if is_list_with_command(ast, 'cons'):
         check_args_number(ast, 3, 'cons')
