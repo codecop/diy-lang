@@ -73,14 +73,20 @@ def find_matching_paren(source, start=0):
     assert source[start] == '('
     pos = start
     open_brackets = 1
+    in_string = False
     while open_brackets > 0:
         pos += 1
         if len(source) == pos:
             raise DiyLangError("Incomplete expression: %s" % source[start:])
-        if source[pos] == '(':
-            open_brackets += 1
-        if source[pos] == ')':
-            open_brackets -= 1
+
+        if source[pos-1] != '\\' and source[pos] == '"':
+            in_string = not in_string
+
+        if not in_string:
+            if source[pos] == '(':
+                open_brackets += 1
+            if source[pos] == ')':
+                open_brackets -= 1
     return pos
 
 
@@ -115,6 +121,11 @@ def first_expression(source):
     elif source[0] == "(":
         last = find_matching_paren(source)
         return source[:last + 1], source[last + 1:]
+    elif source[0] == "\"":
+        match = re.match(r"^\"(\\\"|[^\"])*\"", source)
+        end = match.end()
+        string = source[:end]
+        return string, source[end:]
     else:
         match = re.match(r"^[^\s)(']+", source)
         end = match.end()

@@ -3,7 +3,6 @@
 from .types import DiyLangError, Closure, String
 from .ast import is_boolean, is_atom, is_symbol, is_list, is_closure, \
     is_integer, is_string
-from .parser import unparse
 
 """
 This is the Evaluator module. The `evaluate` function below is the heart
@@ -62,7 +61,8 @@ def evaluate(ast, env):
     if is_list_with_command(ast, 'define'):
         check_args_number(ast, 3, 'define')
         if not is_symbol(ast[1]):
-            raise DiyLangError("not a symbol")  # 'define argument must be symbol'
+            # TODO message should be 'define argument must be symbol'
+            raise DiyLangError("not a symbol")
         name = ast[1]
         value = evaluate(ast[2], env)
         env.set(name, value)
@@ -89,33 +89,51 @@ def evaluate(ast, env):
 
     if is_list_with_command(ast, 'cons'):
         check_args_number(ast, 3, 'cons')
-        first = [evaluate(ast[1], env)]
+        first = evaluate(ast[1], env)
         following = evaluate(ast[2], env)
-        check_arg_list(following, 'cons')
-        first.extend(following)
-        return first
+        if is_list(following):
+            l = [first]
+            l.extend(following)
+            return l
+        if is_string(first) and is_string(following):
+            return String(first.val + following.val)
+        raise DiyLangError("cons" + " arguments must be list or string")
 
     if is_list_with_command(ast, 'head'):
         check_args_number(ast, 2, 'head')
         elements = evaluate(ast[1], env)
-        check_arg_list(elements, 'head')
-        if len(elements) == 0:
-            raise DiyLangError("head of empty list")
-        return elements[0]
+        # now a list node would be great to use polymorphy
+        if is_list(elements):
+            if len(elements) == 0:
+                raise DiyLangError("head of empty list")
+            return elements[0]
+        if is_string(elements):
+            if len(elements.val) == 0:
+                raise DiyLangError("head of empty string")
+            return String(elements.val[0])
+        raise DiyLangError("head" + " arguments must be list or string")
 
     if is_list_with_command(ast, 'tail'):
         check_args_number(ast, 2, 'tail')
         elements = evaluate(ast[1], env)
-        check_arg_list(elements, 'tail')
-        if len(elements) == 0:
-            raise DiyLangError("tail of empty list")
-        return elements[1:]
+        if is_list(elements):
+            if len(elements) == 0:
+                raise DiyLangError("tail of empty list")
+            return elements[1:]
+        if is_string(elements):
+            if len(elements.val) == 0:
+                raise DiyLangError("tail of empty string")
+            return String(elements.val[1:])
+        raise DiyLangError("tail" + " arguments must be list or string")
 
     if is_list_with_command(ast, 'empty'):
         check_args_number(ast, 2, 'empty')
         elements = evaluate(ast[1], env)
-        check_arg_list(elements, 'empty')
-        return len(elements) == 0
+        if is_list(elements):
+            return len(elements) == 0
+        if is_string(elements):
+            return len(elements.val) == 0
+        raise DiyLangError("empty" + " arguments must be list or string")
 
     if is_list_with_command(ast, 'cond'):
         check_args_number(ast, 2, 'cond')

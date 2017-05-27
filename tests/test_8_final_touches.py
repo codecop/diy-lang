@@ -7,7 +7,7 @@ from nose.tools import assert_equals, assert_is_instance, \
 
 from diylang.interpreter import interpret, interpret_file
 from diylang.types import Environment, String, DiyLangError, Closure
-from diylang.parser import parse
+from diylang.parser import parse, find_matching_paren, first_expression
 
 env = None
 
@@ -203,6 +203,17 @@ def test_parsing_strings_with_parens_in_them():
     Tip: You'll probably need to change the function `find_matching_paren` in
     `parser.py` to solve this.
     """
+
+    # stuck, need more tests
+    parens = find_matching_paren("(define foo \"string with a ) inside it\")")
+    assert_equals(39, parens)
+
+    first, rem = first_expression("define foo \"string with a ) inside it\"")
+    assert_equals("define", first)
+    second, rem = first_expression(rem)
+    assert_equals("foo", second)
+    third, rem = first_expression(rem)
+    assert_equals("\"string with a ) inside it\"", third)
 
     actual = parse("(define foo \"string with a ) inside it\")")
     expected = ["define", "foo", String("string with a ) inside it")]
