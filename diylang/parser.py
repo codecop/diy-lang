@@ -2,8 +2,7 @@
 
 import re
 from .ast import is_boolean, is_list
-from .types import DiyLangError
-
+from .types import DiyLangError, String
 
 """
 This is the parser module, with the `parse` function which you'll implement as
@@ -32,6 +31,16 @@ def parse(source):
 
     if re.match(r"^\d+$", code):
         return int(code)
+
+    if len(code) > 0 and code[0] == "\"":
+        match = re.match(r"^\"(\\\"|[^\"])*\"", code)
+        if match:
+            end = match.end()
+            if end == len(code):
+                return String(code[1:-1])
+            raise DiyLangError('Expected EOF')
+
+        raise DiyLangError('Unclosed string')
 
     if code == '()':
         return []
