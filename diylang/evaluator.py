@@ -27,7 +27,7 @@ def evaluate(ast, env):
 
     if is_list_with(ast) and ast[0] == 'quote':
         check_args_number(ast, 2, 'quote')
-        return ast[1]
+        return ast[1]  # no evaluate
 
     if is_list_with(ast) and ast[0] == 'atom':
         check_args_number(ast, 2, 'atom')
@@ -35,20 +35,19 @@ def evaluate(ast, env):
 
     if is_list_with_command(ast, 'eq'):
         check_args_number(ast, 3, 'eq')
-        left = evaluate(ast[1], env)
-        right = evaluate(ast[2], env)
+        left, right = evaluate_two(ast[1:], env)
         if is_list(left) or is_list(right):
             return False
         return left == right
 
     if is_list_with_command(ast, 'mod'):
         check_args_number(ast, 3, 'mod')
-        left, right = eval_parts(ast[1:], env)
+        left, right = evaluate_two_numbers(ast[1:], env)
         return left % right
 
     if is_list_with(ast) and ast[0] in ['+', '-', '/', '*', '>']:
         check_args_number(ast, 3, ast[0])
-        left, right = eval_parts(ast[1:], env)
+        left, right = evaluate_two_numbers(ast[1:], env)
         return eval(str(left) + ast[0] + str(right))
 
     if is_list_with_command(ast, 'if'):
@@ -63,7 +62,7 @@ def evaluate(ast, env):
         if not is_symbol(ast[1]):
             # TODO message should be 'define argument must be symbol'
             raise DiyLangError("not a symbol")
-        name = ast[1]
+        name = ast[1]  # new symbol
         value = evaluate(ast[2], env)
         env.set(name, value)
         return value
@@ -85,7 +84,7 @@ def evaluate(ast, env):
         body = ast[2]
         return Closure(env, params, body)
 
-    if is_list_with(ast) and is_closure(ast[0]):
+    if is_list_with(ast) and is_closure(ast[0]):  # closure execution
         closure = ast[0]
         values = ast[1:]
         names = closure.params
@@ -100,12 +99,9 @@ def evaluate(ast, env):
 
     if is_list_with_command(ast, 'cons'):
         check_args_number(ast, 3, 'cons')
-        first = evaluate(ast[1], env)
-        following = evaluate(ast[2], env)
+        first, following = evaluate_two(ast[1:], env)
         if is_list(following):
-            l = [first]
-            l.extend(following)
-            return l
+            return _cons(first, following)
         if is_string(first) and is_string(following):
             return String(first.val + following.val)
         raise DiyLangError("cons" + " arguments must be list or string")
@@ -156,22 +152,30 @@ def evaluate(ast, env):
                 return evaluate(cond_ast[1], env)
         return False
 
-    if is_list_with(ast) and is_symbol(ast[0]):  # closure invocation
+    if is_list_with(ast) and is_symbol(ast[0]):  # named closure invocation
         closure = env.lookup(ast[0])
-        replaced_ast = [closure]
-        replaced_ast.extend(ast[1:])
+        if not is_closure(closure):
+            raise DiyLangError(str(ast[0]) + " not a function")
+        replaced_ast = _cons(closure, ast[1:])
         return evaluate(replaced_ast, env)
 
     if is_list_with(ast) and is_atom(ast[0]):
         raise DiyLangError("not a function")
 
-    if is_list_with(ast) and not is_atom(ast[0]):  # direct invocation
-        direct = evaluate(ast[0], env)
-        replaced_ast = [direct]
-        replaced_ast.extend(ast[1:])
+    if is_list_with(ast) and not is_atom(ast[0]):  # direct closure invocation
+        closure = evaluate(ast[0], env)
+        if not is_closure(closure):
+            raise DiyLangError(str(closure) + " not a function")
+        replaced_ast = _cons(closure, ast[1:])
         return evaluate(replaced_ast, env)
 
     raise DiyLangError(str(ast))
+
+
+def _cons(element, elements):
+    l = [element]
+    l.extend(elements)
+    return l
 
 
 def is_list_with_command(a, command):
@@ -192,13 +196,18 @@ def check_arg_list(ast, command):
         raise DiyLangError(command + " arguments must be list")
 
 
-def eval_parts(ast, env):
-    left = evaluate(ast[0], env)
-    right = evaluate(ast[1], env)
+def evaluate_two_numbers(ast, env):
+    left, right = evaluate_two(ast, env)
 
     if not is_integer(left):
         raise DiyLangError(str(left))
     if not is_integer(right):
         raise DiyLangError(str(right))
 
+    return left, right
+
+
+def evaluate_two(ast, env):
+    left = evaluate(ast[0], env)
+    right = evaluate(ast[1], env)
     return left, right
