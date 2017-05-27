@@ -117,6 +117,16 @@ def evaluate(ast, env):
         check_arg_list(elements, 'empty')
         return len(elements) == 0
 
+    if is_list_with_command(ast, 'cond'):
+        check_args_number(ast, 2, 'cond')
+        elements = ast[1]
+        check_arg_list(elements, 'cond')
+        for cond_ast in elements:
+            check_args_number(cond_ast, 2, 'cond')
+            if evaluate(cond_ast[0], env):
+                return evaluate(cond_ast[1], env)
+        return False
+
     if is_list_with(ast) and is_symbol(ast[0]):  # closure invocation
         closure = env.lookup(ast[0])
         replaced_ast = [closure]
